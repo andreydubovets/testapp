@@ -8,19 +8,20 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.widget.Button
+import com.andreydubovets.app.extension.PICK_IMAGE_REQUEST
+import com.andreydubovets.app.extension.launchPickImageIntent
+import com.andreydubovets.app.extension.showToast
 import com.andreydubovets.app.imagelist.ImageListAdapter
-import com.andreydubovets.app.utils.FileManager
-import com.andreydubovets.app.utils.StoragePermissionsManager
+import com.andreydubovets.app.helper.*
 import com.andreydubovets.testapp.R
-
 
 class MainActivity : AppCompatActivity() {
     private lateinit var imageList: RecyclerView
     private lateinit var addImageButton: Button
 
-    private val fileManager: FileManager = FileManager()
+    private val fileManager: FileManagerHelper = FileManagerHelper()
     private val imageListAdapter = ImageListAdapter(emptyList())
-    private val storagePermissionsManager: StoragePermissionsManager = StoragePermissionsManager(this)
+    private val storagePermissionsManager: StoragePermissionsHelper = StoragePermissionsHelper(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,10 +39,14 @@ class MainActivity : AppCompatActivity() {
         if (resultCode == Activity.RESULT_OK) {
             when (requestCode) {
                 PICK_IMAGE_REQUEST -> data?.let { handleImageSuccess(it.data) }
-                else -> {
-                }
+                else -> showToast("Cannot pick image")
             }
         }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        storagePermissionsManager.onRequestPermissionsResult(grantResults)
     }
 
     private fun handleImageSuccess(uri: Uri) {
@@ -49,12 +54,15 @@ class MainActivity : AppCompatActivity() {
         updateImageList()
     }
 
-
     private fun initViews() {
         imageList = findViewById(R.id.recyclerview_images)
         addImageButton = findViewById(R.id.button_add_image)
 
-        addImageButton.setOnClickListener { launchPickImageIntent() }
+        addImageButton.setOnClickListener {
+            storagePermissionsManager.requestPermissionsIfNeeded({
+                launchPickImageIntent()
+            })
+        }
     }
 
     private fun initList() {
@@ -66,10 +74,5 @@ class MainActivity : AppCompatActivity() {
     private fun updateImageList() {
         val uris = fileManager.getUriListFromQulixFolder()
         imageListAdapter.setData(uris)
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        storagePermissionsManager.onRequestPermissionsResult(grantResults)
     }
 }

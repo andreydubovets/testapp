@@ -1,4 +1,4 @@
-package com.andreydubovets.app.utils
+package com.andreydubovets.app.helper
 
 import android.content.Context
 import android.database.Cursor
@@ -14,7 +14,7 @@ import java.io.IOException
 import java.nio.channels.FileChannel
 
 
-class FileManager {
+class FileManagerHelper {
 
     fun createQulixFolder() {
         val file = File(QULIX_DIRECTORY_PATH)
@@ -30,17 +30,24 @@ class FileManager {
         val source = uriToPath(context, uri)
         val destinationFile = File(QULIX_DIRECTORY_PATH, File(source).name)
         copyFile(source, QULIX_DIRECTORY_PATH)
-        updateFileMetaData(destinationFile.path)
+        updateFileExifData(destinationFile.path)
     }
 
     private fun uriToPath(context: Context, uri: Uri): String {
         var cursor: Cursor? = null
         try {
-            val proj = arrayOf(MediaStore.Images.Media.DATA)
-            cursor = context.contentResolver.query(uri, proj, null, null, null)
-            val column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
+            val projection = arrayOf(MediaStore.Images.Media.DATA)
+
+            cursor = context.contentResolver.query(
+                    uri,
+                    projection,
+                    null,
+                    null,
+                    null)
+
+            val columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
             cursor.moveToFirst()
-            return cursor.getString(column_index)
+            return cursor.getString(columnIndex)
         } finally {
             if (cursor != null) {
                 cursor.close()
@@ -87,19 +94,24 @@ class FileManager {
         }
     }
 
-    fun updateFileMetaData(filePath: String) = try {
-        val exifInterface = ExifInterface(filePath)
-        exifInterface.setAttribute(ExifInterface.TAG_DATETIME, DATA_DATETIME)
-        exifInterface.saveAttributes()
+    private fun updateFileExifData(filePath: String) = try {
+        ExifInterface(filePath).apply {
+            setAttribute(ExifInterface.TAG_DATETIME, DATA_DATETIME)
+            saveAttributes()
+        }
     } catch (e: IOException) {
         e.printStackTrace()
     }
 
     fun getUriListFromQulixFolder(): List<Uri> {
-        return File(QULIX_DIRECTORY_PATH).listFiles()
-                .filter { it.isFile }
-                .map { Uri.fromFile(it) }
-                .toList()
+        val files = File(QULIX_DIRECTORY_PATH).listFiles()
+        return when (files) {
+            null -> emptyList()
+            else -> files
+                    .filter { it.isFile }
+                    .map { Uri.fromFile(it) }
+                    .toList()
+        }
     }
 
     companion object {
@@ -108,10 +120,10 @@ class FileManager {
 
         val QULIX_DIRECTORY_PATH = (
                 Environment.getExternalStorageDirectory().toString()
-                + File.separator
-                + PICTURES_FOLDER_NAME
-                + File.separator
-                + FOLDER_NAME
+                        + File.separator
+                        + PICTURES_FOLDER_NAME
+                        + File.separator
+                        + FOLDER_NAME
                 )
 
         const val DATA_DATETIME = "2018-05-14 15:00:00"

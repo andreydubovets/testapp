@@ -1,4 +1,4 @@
-package com.andreydubovets.app.utils
+package com.andreydubovets.app.helper
 
 import android.Manifest
 import android.app.Activity
@@ -7,7 +7,7 @@ import android.os.Build
 import android.support.v4.app.ActivityCompat
 
 
-class StoragePermissionsManager(private val activity: Activity) {
+class StoragePermissionsHelper(private val activity: Activity) {
     private var onPermissionGranted: () -> Unit = {}
 
     fun onRequestPermissionsResult(grantResults: IntArray) {
