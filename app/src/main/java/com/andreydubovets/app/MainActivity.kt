@@ -9,6 +9,8 @@ import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.widget.Button
 import com.andreydubovets.app.imagelist.ImageListAdapter
+import com.andreydubovets.app.utils.FileManager
+import com.andreydubovets.app.utils.StoragePermissionsManager
 import com.andreydubovets.testapp.R
 
 

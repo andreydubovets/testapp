@@ -1,4 +1,4 @@
-package com.andreydubovets.app
+package com.andreydubovets.app.utils
 
 import android.Manifest
 import android.app.Activity
